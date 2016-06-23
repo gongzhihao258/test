@@ -19,6 +19,14 @@
 @property(strong,nonatomic)NSArray *array;
 @property(strong,nonatomic)NSArray *imageName;
 @property(strong,nonatomic)NSArray *detailLabel;
+@property (nonatomic,strong)NSURLSession *urlSession;
+@property(strong,nonatomic)NSMutableArray *mutArray;
+@property(strong,nonatomic)NSArray *array1;
+/**
+ *  头像URL
+ */
+@property (nonatomic,copy)NSString *headImageUrl;
+
 
 @end
 
@@ -26,18 +34,25 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    [self initView];
+    
+    
     self.array = @[@[@"王小美"],
                    @[@"购物车",@"我的收藏",@"消息通知",@"我的订单"],
                    @[@"我的抵用券",@"我的积分"],
                    @[@"设置"]];
-    self.imageName = @[@[@"1.jpg"],
-                       @[@"2",@"3",@"4",@"5"],
-                       @[@"6",@"7"],@[@"nil"]];
+    
+    self.headImageUrl = @"1.jpg";
+    
+    self.imageName  = @[@[@"1.jpg"],
+                        @[@"2",@"3",@"4",@"5"],
+                        @[@"6",@"7"],@[@"nil"]];
     self.detailLabel = @[@[@""],
                          @[@"0",@"6",@"21",@"357个"],
                          @[@"5张",@"2765积分"],
                          @[@""]];
+    
+    [self initView];
+    [self dataRequest];
     
     self.view.backgroundColor = [UIColor  colorWithRed:243/255.0  green:243/255.0  blue:243/255.0 alpha:1.0];
     
@@ -90,7 +105,7 @@
 }
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-    return 4;
+    return self.array.count;
 }
 - (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section
 {
@@ -121,8 +136,9 @@
 }
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
+    
     if (indexPath.section == 0) {
-        return [TestTableViewCell tableView:tableView imageDataArray:self.imageName titleDataArray:self.array indexPath:indexPath];
+        return [TestTableViewCell tableView:tableView imageUrl:self.headImageUrl titleDataArray:self.array indexPath:indexPath];
     } else {
     
         NSString *identifier = @"reuseidenfier";
@@ -130,7 +146,7 @@
         if (cell == nil) {
             cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:identifier];
         }
-        cell.detailTextLabel.text = self.detailLabel[indexPath.section][indexPath.row];
+        cell.detailTextLabel.text = self.array1[indexPath.section][indexPath.row];
         cell.detailTextLabel.textColor = [UIColor redColor];
         cell.textLabel.text = self.array[indexPath.section][indexPath.row];
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
@@ -181,10 +197,52 @@
     [footView addSubview:button];*/
     return footView;
 }
-- (void)dataResponds
+- (void)dataRequest
 {
-    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://test.ydm01.com/ydmxc/queryCustomerCenter.do?customerId=23266&cMerchantId=410 "]];
-    NSData *dataResponds = [[NSURLSessionTask  ];
+    
+    NSURL *url = [NSURL URLWithString:@"http://test.ydm01.com/ydmxc/queryCustomerCenter.do?customerId=23266&cMerchantId=410"];
+    NSURLRequest *request = [NSURLRequest requestWithURL:url];
+    self.urlSession = [NSURLSession sharedSession];
+    NSURLSessionDataTask *task = [self.urlSession dataTaskWithRequest:request
+                                            completionHandler:
+                                  ^(NSData *data, NSURLResponse *response, NSError *error)
+                        {
+                            if (error == nil) {
+                                NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableLeaves error:&error];
+                                NSLog(@"%@",dict);
+                                
+                                NSDictionary *userDice = dict[@"centerList"];
+                                NSString *string0 = userDice[@"HEADURL"];
+                                self.headImageUrl = string0;
+                                self.mutArray= [[NSMutableArray alloc]initWithArray:self.detailLabel];
+                                NSString *string1 = userDice[@"ACTIVITYNUM"];
+                                NSString *string2 = userDice[@"COLLECTNUM"];
+                                NSString *string3 = userDice[@"MESSAGENUM"];
+                                NSString *string4 = userDice[@"ORDERNUM"];
+                                NSString *string5 = userDice[@"CARTNUM"];
+                                NSString *string6 = userDice[@"REST_SCORE"];
+                                [self.mutArray replaceObjectAtIndex:1 withObject:@[string1,string2,string3,string4]];
+                                [self.mutArray replaceObjectAtIndex:2 withObject:@[string5,string6]];
+//                                self.mutArray[1][0] = userDice[@"ACTIVITYNUM"];
+//                                self.mutArray[1][1] = userDice[@"COLLECTNUM"];
+//                                self.mutArray[1][2] = userDice[@"MESSAGENUM"];
+//                                self.mutArray[1][3] = userDice[@"ORDERNUM"];
+//                                self.mutArray[2][0] = userDice[@"CARTNUM"];
+//                                self.mutArray[2][1] = userDice[@"REST_SCORE"];
+                                self.array1 = self.mutArray;
+                                NSLog(@"%@",self.array1);
+                                
+                                
+                                
+                                [self.tableView reloadData];
+                                
+                            }else
+                            {
+                                NSLog(@"数据请求失败");
+                            }
+                        }
+    ];
+    [task resume];
 }
 - (void)dial
 {

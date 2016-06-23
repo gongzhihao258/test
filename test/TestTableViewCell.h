@@ -24,7 +24,7 @@
  *
  *  @return cell
  */
-+ (TestTableViewCell *)tableView:(UITableView *)tableView imageDataArray:(NSArray *)imageDataArray titleDataArray:(NSArray *)titleDataArray indexPath:(NSIndexPath *)indexPath;
++ (TestTableViewCell *)tableView:(UITableView *)tableView imageUrl:(NSString *)imageUrl titleDataArray:(NSArray *)titleDataArray indexPath:(NSIndexPath *)indexPath;
 
 
 @end
